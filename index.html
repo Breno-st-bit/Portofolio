@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle Financeiro — Sites</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#0b1020;color:#eef2ff}
+.container{max-width:1200px;margin:auto;padding:28px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+h1{margin:0;font-size:28px} .subtitle{color:#9ca8c7;margin-top:6px}
+button{border:0;border-radius:10px;padding:11px 16px;cursor:pointer;font-weight:700}
+.primary{background:#6d5dfc;color:white}.danger{background:#ef4444;color:white}.ghost{background:#1a2238;color:#dbe3ff}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.card,.panel{background:#121a2d;border:1px solid #24304b;border-radius:16px;padding:20px}
+.card small{color:#94a3c4}.value{font-size:25px;font-weight:800;margin-top:8px}
+.green{color:#4ade80}.red{color:#fb7185}.blue{color:#60a5fa}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel h2{font-size:18px;margin:0 0 16px}
+form{display:grid;gap:10px}input,select{width:100%;padding:12px;border-radius:9px;border:1px solid #33415f;background:#0d1425;color:white}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px 8px;border-bottom:1px solid #26324d;font-size:14px}th{color:#94a3c4}
+.actions{display:flex;gap:7px}.empty{text-align:center;color:#8290b2;padding:20px}
+.progress{height:10px;background:#26324a;border-radius:20px;overflow:hidden}.bar{height:100%;background:#6d5dfc}
+.plan-active{color:#4ade80;font-weight:700}.plan-late{color:#fb7185;font-weight:700}.plan-paused{color:#fbbf24;font-weight:700}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#1d2944;font-size:12px}.smallbtn{padding:7px 9px;font-size:12px}
+@media(max-width:850px){.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+@media(max-width:520px){.cards{grid-template-columns:1fr}.row{grid-template-columns:1fr}.container{padding:16px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div><h1>💻 Controle Financeiro</h1><div class="subtitle">Sua renda vendendo sites + controle dos seus gastos</div></div>
+<button class="ghost" onclick="limparTudo()">Limpar dados</button>
+</header>
+
+<section class="cards">
+<div class="card"><small>Faturamento (sites + mensalidades pagas)</small><div id="income" class="value green">R$ 0,00</div></div>
+<div class="card"><small>Gastos</small><div id="expenses" class="value red">R$ 0,00</div></div>
+<div class="card"><small>Lucro líquido</small><div id="profit" class="value blue">R$ 0,00</div></div>
+<div class="card"><small>Sites vendidos</small><div id="sites" class="value">0</div></div>
+</section>
+
+<div class="grid">
+<div class="panel">
+<h2>➕ Registrar venda de site</h2>
+<form id="saleForm">
+<input id="client" placeholder="Nome do cliente" required>
+<div class="row">
+<input id="email" type="email" placeholder="E-mail do cliente">
+<input id="phone" type="tel" placeholder="Telefone / WhatsApp">
+</div>
+<div class="row">
+<input id="siteValue" type="number" min="0" step="0.01" placeholder="Valor do site (R$)" required>
+<select id="saleStatus"><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select>
+</div>
+<input id="saleDate" type="date" required>
+<button class="primary">Adicionar venda</button>
+</form>
+</div>
+
+<div class="panel">
+<h2>➖ Registrar gasto</h2>
+<form id="expenseForm">
+<input id="expenseName" placeholder="Ex.: domínio, hospedagem, anúncio" required>
+<div class="row">
+<input id="expenseValue" type="number" min="0" step="0.01" placeholder="Valor (R$)" required>
+<select id="expenseCategory">
+<option>Ferramentas</option><option>Hospedagem</option><option>Domínio</option>
+<option>Publicidade</option><option>Transporte</option><option>Alimentação</option><option>Outros</option>
+</select>
+</div>
+<input id="expenseDate" type="date" required>
+<button class="danger">Adicionar gasto</button>
+</form>
+</div>
+</div>
+
+<div class="grid" style="margin-top:18px">
+<div class="panel">
+<h2>📈 Resumo do mês</h2>
+<div style="display:flex;justify-content:space-between;margin:10px 0"><span>Receita</span><b id="monthIncome">R$ 0,00</b></div>
+<div style="display:flex;justify-content:space-between;margin:10px 0"><span>Gastos</span><b id="monthExpenses">R$ 0,00</b></div>
+<div style="display:flex;justify-content:space-between;margin:10px 0"><span>Lucro</span><b id="monthProfit">R$ 0,00</b></div>
+<div style="margin-top:18px"><small>Meta mensal de faturamento</small><input id="goal" type="number" min="0" step="0.01" placeholder="Ex.: 5000" oninput="render()"><div style="margin-top:8px" class="progress"><div id="bar" class="bar" style="width:0%"></div></div><small id="goalText"></small></div>
+</div>
+
+<div class="panel">
+<h2>💡 Indicadores</h2>
+<div style="display:grid;gap:14px">
+<div><small>Ticket médio por site</small><div id="ticket" class="value">R$ 0,00</div></div>
+<div><small>Margem líquida</small><div id="margin" class="value">0%</div></div>
+<div><small>Vendas pendentes</small><div id="pending" class="value">R$ 0,00</div></div>
+</div>
+</div>
+</div>
+
+<div class="grid" style="margin-top:18px">
+<div class="panel">
+<h2>🧾 Vendas e clientes</h2><div id="salesTable"></div>
+</div>
+<div class="panel">
+<h2>💸 Gastos</h2><div id="expenseTable"></div>
+</div>
+</div>
+<div class="panel" style="margin-top:18px">
+<h2>🔄 Planos de manutenção mensal</h2>
+<p class="subtitle">Controle clientes que pagam R$ 99,99 por mês para manutenção e pequenas alterações no site.</p>
+
+<form id="planForm" style="margin-bottom:20px">
+<div class="row">
+<input id="planClient" placeholder="Nome do cliente" required>
+<input id="planEmail" type="email" placeholder="E-mail">
+</div>
+<div class="row">
+<input id="planPhone" type="tel" placeholder="Telefone / WhatsApp">
+<input id="planValue" type="number" min="0" step="0.01" value="99.99" placeholder="Mensalidade">
+</div>
+<div class="row">
+<input id="planStart" type="date" required>
+<input id="planDue" type="date" required>
+</div>
+<input id="planNotes" placeholder="Observações (ex.: inclui até 2 alterações por mês)">
+<button class="primary">Cadastrar plano</button>
+</form>
+
+<div class="cards" style="margin-bottom:0">
+<div class="card"><small>Mensalidades ativas</small><div id="activePlans" class="value">0</div></div>
+<div class="card"><small>Receita mensal prevista</small><div id="monthlyRecurring" class="value green">R$ 0,00</div></div>
+<div class="card"><small>A receber neste mês</small><div id="duePlans" class="value blue">R$ 0,00</div></div>
+<div class="card"><small>Em atraso</small><div id="latePlans" class="value red">0</div></div>
+</div>
+<div id="plansTable" style="margin-top:16px"></div>
+</div>
+
+<div class="panel" id="historyPanel" style="margin-top:18px;display:none">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<h2>📚 Histórico de mensalidades</h2>
+<button class="ghost" onclick="closePlanHistory()">Fechar</button>
+</div>
+<div id="historyContent"></div>
+</div>
+
+<div class="panel" id="monthlyPortfolio" style="margin-top:18px">
+<h2>📊 Portfólio do mês</h2>
+<p class="subtitle" id="portfolioStatus">Resumo completo do mês atual.</p>
+<div class="cards" style="margin-top:15px">
+<div class="card"><small>Sites vendidos</small><div id="portfolioSites" class="value">0</div></div>
+<div class="card"><small>Faturamento do mês</small><div id="portfolioIncome" class="value green">R$ 0,00</div></div>
+<div class="card"><small>Gastos do mês</small><div id="portfolioExpenses" class="value red">R$ 0,00</div></div>
+<div class="card"><small>Lucro do mês</small><div id="portfolioProfit" class="value blue">R$ 0,00</div></div>
+</div>
+<div class="grid" style="margin-top:12px">
+<div class="card"><small>Mensalidades recebidas</small><div id="portfolioRecurring" class="value">R$ 0,00</div></div>
+<div class="card"><small>Clientes em manutenção</small><div id="portfolioClients" class="value">0</div></div>
+<div class="card"><small>Mensalidades em atraso</small><div id="portfolioLate" class="value red">0</div></div>
+<div class="card"><small>Ticket médio dos sites</small><div id="portfolioTicket" class="value">R$ 0,00</div></div>
+</div>
+<div style="margin-top:16px">
+<h3 style="font-size:15px">📋 Vendas do mês</h3>
+<div id="portfolioSales"></div>
+</div>
+<div style="margin-top:16px">
+<h3 style="font-size:15px">💸 Gastos do mês</h3>
+<div id="portfolioExpenseList"></div>
+</div>
+</div>
+
+<div class="panel" style="margin-top:18px">
+<h2>🗂️ Concluídos / Confirmados</h2>
+<p class="subtitle">Arquive aqui vendas e gastos que já foram concluídos ou confirmados. Eles continuam guardados e podem ser restaurados.</p>
+<div class="grid">
+<div>
+<h3 style="font-size:15px">Vendas concluídas</h3>
+<div id="confirmedSales"></div>
+</div>
+<div>
+<h3 style="font-size:15px">Gastos confirmados</h3>
+<div id="confirmedExpenses"></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const key="financeiro_sites_v1";
+let data=JSON.parse(localStorage.getItem(key)||'{"sales":[],"expenses":[],"confirmedSales":[],"confirmedExpenses":[],"goal":0}');
+data.confirmedSales=data.confirmedSales||[];
+data.confirmedExpenses=data.confirmedExpenses||[];
+data.plans=data.plans||[];
+data.plans.forEach(x=>{x.paymentHistory=x.paymentHistory||[]});
+const money=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+function planPaidTotal(){return data.plans.reduce((s,x)=>s+(x.paidTotal||0),0)}
+const today=()=>new Date().toISOString().slice(0,10);
+saleDate.value=today(); expenseDate.value=today();
+
+function save(){localStorage.setItem(key,JSON.stringify(data));render()}
+function render(){
+ data.goal=Number(goal.value||data.goal||0); goal.value=data.goal||"";
+ const salesIncome=data.sales.filter(x=>x.status==="Pago").reduce((s,x)=>s+x.value,0);
+ const income=salesIncome+planPaidTotal();
+ const pending=data.sales.filter(x=>x.status==="Pendente").reduce((s,x)=>s+x.value,0);
+ const expenses=data.expenses.reduce((s,x)=>s+x.value,0);
+ const profit=income-expenses;
+ document.getElementById('income').textContent=money(income);
+ document.getElementById('expenses').textContent=money(expenses);
+ document.getElementById('profit').textContent=money(profit);
+ document.getElementById('sites').textContent=data.sales.length;
+ const ym=new Date().toISOString().slice(0,7);
+ const salesMonthIncome=data.sales.filter(x=>x.date.slice(0,7)===ym&&x.status==="Pago").reduce((s,x)=>s+x.value,0);
+ const maintenanceMonthIncome=data.plans.filter(x=>x.lastPaidMonth===ym).reduce((s,x)=>s+x.value,0);
+ const mi=salesMonthIncome+maintenanceMonthIncome;
+ const me=data.expenses.filter(x=>x.date.slice(0,7)===ym).reduce((s,x)=>s+x.value,0);
+ document.getElementById('monthIncome').textContent=money(mi);
+ document.getElementById('monthExpenses').textContent=money(me);
+ document.getElementById('monthProfit').textContent=money(mi-me);
+ document.getElementById('ticket').textContent=money(data.sales.length?income/data.sales.length:0);
+ document.getElementById('margin').textContent=(income?((profit/income)*100).toFixed(1):0)+"%";
+ document.getElementById('pending').textContent=money(pending);
+ const pct=data.goal?Math.min(100,(mi/data.goal)*100):0;
+ document.getElementById('bar').style.width=pct+"%";
+ document.getElementById('goalText').textContent=data.goal?`${pct.toFixed(0)}% da meta — ${money(Math.max(0,data.goal-mi))} restantes`:"Defina uma meta para acompanhar seu progresso.";
+ document.getElementById('salesTable').innerHTML=data.sales.length?`<table><tr><th>Cliente</th><th>Contato</th><th>Valor</th><th>Status</th><th></th></tr>${data.sales.map((x,i)=>`<tr><td><b>${esc(x.client)}</b><br><small>${x.date}</small></td><td><small>${x.email?esc(x.email):'—'}<br>${x.phone?esc(x.phone):'—'}</small></td><td>${money(x.value)}</td><td>${x.status}</td><td><div class="actions"><button class="ghost" onclick="confirmSale(${i})">✓</button><button class="ghost" onclick="delSale(${i})">×</button></div></td></tr>`).join('')}</table>`:'<div class="empty">Nenhuma venda cadastrada.</div>';
+ document.getElementById('expenseTable').innerHTML=data.expenses.length?`<table><tr><th>Gasto</th><th>Valor</th><th></th></tr>${data.expenses.map((x,i)=>`<tr><td>${esc(x.name)}<br><small>${x.category} · ${x.date}</small></td><td>${money(x.value)}</td><td><div class="actions"><button class="ghost" onclick="confirmExpense(${i})">✓</button><button class="ghost" onclick="delExpense(${i})">×</button></div></td></tr>`).join('')}</table>`:'<div class="empty">Nenhum gasto cadastrado.</div>';
+ document.getElementById('confirmedSales').innerHTML=data.confirmedSales.length?`<table><tr><th>Cliente</th><th>Valor</th><th></th></tr>${data.confirmedSales.map((x,i)=>`<tr><td><b>${esc(x.client)}</b><br><small>${x.email?esc(x.email):''} ${x.phone?'· '+esc(x.phone):''}<br>${x.date}</small></td><td>${money(x.value)}</td><td><button class="ghost" onclick="restoreSale(${i})">↩</button></td></tr>`).join('')}</table>`:'<div class="empty">Nenhuma venda concluída.</div>';
+ renderMonthlyPortfolio();
+ renderPlans();
+ document.getElementById('confirmedExpenses').innerHTML=data.confirmedExpenses.length?`<table><tr><th>Gasto</th><th>Valor</th><th></th></tr>${data.confirmedExpenses.map((x,i)=>`<tr><td>${esc(x.name)}<br><small>${esc(x.category)} · ${x.date}</small></td><td>${money(x.value)}</td><td><button class="ghost" onclick="restoreExpense(${i})">↩</button></td></tr>`).join('')}</table>`:'<div class="empty">Nenhum gasto confirmado.</div>';
+ localStorage.setItem(key,JSON.stringify(data));
+}
+planStart.value=today(); planDue.value=today();
+planForm.onsubmit=e=>{
+ e.preventDefault();
+ data.plans.push({
+  client:planClient.value,email:planEmail.value,phone:planPhone.value,
+  value:+planValue.value||99.99,start:planStart.value,due:planDue.value,
+  notes:planNotes.value,status:"Ativo",paidMonths:0,paidTotal:0
+ });
+ e.target.reset(); planValue.value="99.99"; planStart.value=today(); planDue.value=today(); save();
+};
+function planStatus(x){
+ if(x.status==="Pausado") return '<span class="plan-paused">Pausado</span>';
+ const now=new Date(), due=new Date(x.due+"T23:59:59");
+ return due<now ? '<span class="plan-late">Em atraso</span>' : '<span class="plan-active">Ativo</span>';
+}
+function renderMonthlyPortfolio(){
+ const now=new Date();
+ const ym=now.toISOString().slice(0,7);
+ const monthLabel=now.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+ const monthSales=data.sales.filter(x=>x.date&&x.date.slice(0,7)===ym);
+ const paidSales=monthSales.filter(x=>x.status==="Pago");
+ const salesIncome=paidSales.reduce((s,x)=>s+x.value,0);
+ const monthExpenses=data.expenses.filter(x=>x.date&&x.date.slice(0,7)===ym);
+ const expenseTotal=monthExpenses.reduce((s,x)=>s+x.value,0);
+ const recurring=data.plans.filter(x=>x.lastPaidMonth===ym).reduce((s,x)=>s+x.value,0);
+ const income=salesIncome+recurring;
+ const profit=income-expenseTotal;
+ const activeClients=data.plans.filter(x=>x.status==="Ativo").length;
+ const late=data.plans.filter(x=>x.status==="Ativo" && new Date(x.due+"T23:59:59")<now).length;
+ const ticket=paidSales.length?salesIncome/paidSales.length:0;
+ document.getElementById("portfolioStatus").innerHTML=`Portfólio de <b style="text-transform:capitalize">${monthLabel}</b>. No dia <b>21</b>, este resumo fica em destaque para conferência do mês.`;
+ document.getElementById("portfolioSites").textContent=monthSales.length;
+ document.getElementById("portfolioIncome").textContent=money(income);
+ document.getElementById("portfolioExpenses").textContent=money(expenseTotal);
+ document.getElementById("portfolioProfit").textContent=money(profit);
+ document.getElementById("portfolioRecurring").textContent=money(recurring);
+ document.getElementById("portfolioClients").textContent=activeClients;
+ document.getElementById("portfolioLate").textContent=late;
+ document.getElementById("portfolioTicket").textContent=money(ticket);
+ document.getElementById("portfolioSales").innerHTML=monthSales.length?`<table><tr><th>Cliente</th><th>Valor</th><th>Status</th></tr>${monthSales.map(x=>`<tr><td>${esc(x.client)}</td><td>${money(x.value)}</td><td>${x.status}</td></tr>`).join("")}</table>`:'<div class="empty">Nenhuma venda neste mês.</div>';
+ document.getElementById("portfolioExpenseList").innerHTML=monthExpenses.length?`<table><tr><th>Gasto</th><th>Categoria</th><th>Valor</th></tr>${monthExpenses.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.category)}</td><td>${money(x.value)}</td></tr>`).join("")}</table>`:'<div class="empty">Nenhum gasto neste mês.</div>';
+ if(now.getDate()===21){
+   document.getElementById("monthlyPortfolio").style.border="2px solid #6d5dfc";
+   document.getElementById("portfolioStatus").innerHTML+=` <span class="badge">📌 FECHAMENTO DO DIA 21</span>`;
+ }
+}
+function renderPlans(){
+ const active=data.plans.filter(x=>x.status==="Ativo");
+ const recurring=active.reduce((s,x)=>s+x.value,0);
+ const due=active.reduce((s,x)=>s+x.value,0);
+ const late=active.filter(x=>new Date(x.due+"T23:59:59")<new Date()).length;
+ document.getElementById('activePlans').textContent=active.length;
+ document.getElementById('monthlyRecurring').textContent=money(recurring);
+ document.getElementById('duePlans').textContent=money(due);
+ document.getElementById('latePlans').textContent=late;
+ document.getElementById('plansTable').innerHTML=data.plans.length?`<table><tr><th>Cliente</th><th>Plano</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr>${data.plans.map((x,i)=>`<tr><td><b>${esc(x.client)}</b><br><small>${x.email?esc(x.email):''} ${x.phone?'· '+esc(x.phone):''}</small></td><td>${money(x.value)}/mês<br><small>${x.notes?esc(x.notes):'Manutenção + alterações'}</small></td><td>${x.due}</td><td>${planStatus(x)}</td><td><div class="actions"><button class="ghost smallbtn" onclick="markPlanPaid(${i})">✓ Pago</button><button class="ghost smallbtn" onclick="showPlanHistory(${i})">Histórico</button><button class="ghost smallbtn" onclick="togglePlan(${i})">${x.status==="Ativo"?"Pausar":"Ativar"}</button><button class="ghost smallbtn" onclick="deletePlan(${i})">×</button></div></td></tr>`).join('')}</table>`:'<div class="empty">Nenhum plano cadastrado.</div>';
+}
+function markPlanPaid(i){
+ const plan=data.plans[i];
+ const paidDate=new Date();
+ const paidMonth=(plan.due||paidDate.toISOString().slice(0,10)).slice(0,7);
+ plan.paymentHistory=plan.paymentHistory||[];
+ const already=plan.paymentHistory.some(p=>p.month===paidMonth && p.status==="Pago");
+ if(!already){
+   plan.paymentHistory.push({
+     month:paidMonth,
+     amount:plan.value,
+     paidAt:paidDate.toISOString().slice(0,10),
+     status:"Pago"
+   });
+ }
+ plan.paidMonths=(plan.paidMonths||0)+1;
+ plan.paidTotal=(plan.paidTotal||0)+plan.value;
+ plan.lastPaidMonth=paidDate.toISOString().slice(0,7);
+ const d=new Date((plan.due||paidDate.toISOString().slice(0,10))+"T12:00:00");
+ d.setMonth(d.getMonth()+1);
+ plan.due=d.toISOString().slice(0,10);
+ plan.status="Ativo";
+ save();
+}
+function togglePlan(i){data.plans[i].status=data.plans[i].status==="Ativo"?"Pausado":"Ativo";save()}
+function deletePlan(i){if(confirm("Excluir este plano?")){data.plans.splice(i,1);save()}}
+function showPlanHistory(i){
+ const plan=data.plans[i];
+ const history=plan.paymentHistory||[];
+ const months=[];
+ const start=new Date((plan.start||new Date().toISOString().slice(0,10))+"T12:00:00");
+ const first=new Date(start.getFullYear(),start.getMonth(),1);
+ const current=new Date(); current.setDate(1);
+ let cursor=new Date(first);
+ for(let n=0;n<36 && cursor<=current;n++){
+   const month=cursor.toISOString().slice(0,7);
+   const paid=history.find(x=>x.month===month&&x.status==="Pago");
+   months.push({month,paid});
+   cursor.setMonth(cursor.getMonth()+1);
+ }
+ months.reverse();
+ const rows=months.map(m=>{
+   const [y,mo]=m.month.split("-");
+   const label=new Date(Number(y),Number(mo)-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+   return `<tr><td style="text-transform:capitalize">${label}</td><td>${m.paid?'<span class="plan-active">✅ Pago</span>':'<span class="plan-paused">⏳ Não pago</span>'}</td><td>${m.paid?money(m.paid.amount):'—'}</td><td>${m.paid?m.paid.paidAt:'—'}</td></tr>`;
+ }).join("");
+ document.getElementById("historyContent").innerHTML=`
+ <div class="card" style="margin-bottom:14px">
+ <b>${esc(plan.client)}</b><br><small>${money(plan.value)} por mês · Próximo vencimento: ${plan.due}</small>
+ </div>
+ <table><tr><th>Mês</th><th>Status</th><th>Valor</th><th>Pago em</th></tr>${rows||'<tr><td colspan="4">Sem histórico.</td></tr>'}</table>`;
+ document.getElementById("historyPanel").style.display="block";
+ document.getElementById("historyPanel").scrollIntoView({behavior:"smooth"});
+}
+function closePlanHistory(){document.getElementById("historyPanel").style.display="none"}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+saleForm.onsubmit=e=>{e.preventDefault();data.sales.push({client:client.value,email:email.value,phone:phone.value,value:+siteValue.value,status:saleStatus.value,date:saleDate.value});e.target.reset();saleDate.value=today();save()}
+expenseForm.onsubmit=e=>{e.preventDefault();data.expenses.push({name:expenseName.value,value:+expenseValue.value,category:expenseCategory.value,date:expenseDate.value});e.target.reset();expenseDate.value=today();save()}
+function delSale(i){data.sales.splice(i,1);save()} function delExpense(i){data.expenses.splice(i,1);save()}
+function confirmSale(i){data.confirmedSales.push(data.sales[i]);data.sales.splice(i,1);save()}
+function confirmExpense(i){data.confirmedExpenses.push(data.expenses[i]);data.expenses.splice(i,1);save()}
+function restoreSale(i){data.sales.push(data.confirmedSales[i]);data.confirmedSales.splice(i,1);save()}
+function restoreExpense(i){data.expenses.push(data.confirmedExpenses[i]);data.confirmedExpenses.splice(i,1);save()}
+function limparTudo(){if(confirm("Apagar todas as vendas e gastos?")){data={sales:[],expenses:[],confirmedSales:[],confirmedExpenses:[],goal:0};save()}}
+render();
+</script>
+</body>
+</html>
